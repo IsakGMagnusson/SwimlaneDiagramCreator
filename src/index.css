@@ -1,13 +1,82 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
+}
+
+.mainpage {
+  background-color: darkgray;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.textarea {
+  width: 20%;
+  height: 99vh;
+  resize: none;
+  font-size: small;
+  align-items: flex-start;
+}
+
+.reactflow-container {
+  background-color: antiquewhite;
+  width: 80%;
+  height: 100vh;
+  justify-content: flex-end;
+}
+
+.swimlane-body {
+  height: 150px;
+  width: 500px;
+  min-width: 100px;
+  background-color: rgb(17, 14, 53);
+  outline: 1px solid rgb(55, 218, 218);
+  outline-offset: -1px;
+}
+
+.swimlane-tag-square {
+  width: 25px;
+  height: 100%;
+  background-color: rgb(64, 23, 179);
+  outline: 1px solid rgb(10, 175, 175);
+  outline-offset: -1px;
+}
+
+.swimlane-tag-text {
+  writing-mode: vertical-rl;
+  text-align: center;
+  height: 100%;
+  width: 100%;
+  color: whitesmoke;
+}
+
+.react-flow__node {
+  z-index: -1 !important;
+}
+
+.square-body {
+  height: 50px;
+  width: 100px;
+  background-color: rgb(80, 71, 185);
+  outline: 1px solid rgb(55, 218, 218);
+  outline-offset: -1px;
+  align-items: center;
+}
+
+.square-label-text {
+  position: relative;
+  color: aliceblue;
+  font-size: small;
+  width: 100%;
+  height: 100%;
+  text-align: center;
 }
