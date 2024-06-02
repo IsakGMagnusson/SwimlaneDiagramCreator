@@ -1,6 +1,64 @@
-import React, { memo } from "react";
-import { Handle, Position } from "reactflow";
+import React from "react";
+import { Handle, Position, XYPosition } from "reactflow";
+import { SquareData, SwimlaneData } from "../models/Model";
+import { findSwimlaneFromTag } from "./Swimlane";
 
+export const SQUARE_WIDTH = 100;
+export const SQUARE_SPACING = 50;
+export const SQUARE_STARTING_X = 40;
+export const SQUARE_SIZE = SQUARE_WIDTH + SQUARE_SPACING;
+
+enum SourceDirections {
+  RIGHT = "source_right",
+  TOP = "source_top",
+  BOTTOM = "source_bottom",
+}
+
+enum TargetDirections {
+  LEFT = "target_right",
+  TOP = "target_top",
+  BOTTOM = "target_bottom",
+}
+
+export function findEdgeHandleSource(from: XYPosition, to: XYPosition): string {
+  if (from.x == to.x && from.y > to.y) return SourceDirections.TOP;
+  if (from.x == to.x && from.y < to.y) return SourceDirections.BOTTOM;
+  return SourceDirections.RIGHT;
+}
+
+export function findEdgeHandleTarget(from: XYPosition, to: XYPosition): string {
+  if (from.x == to.x && from.y > to.y) return TargetDirections.BOTTOM;
+  if (from.x == to.x && from.y < to.y) return TargetDirections.TOP;
+  return TargetDirections.LEFT;
+}
+
+export function isSquareSlotOccupied(
+  squareDatas: SquareData[],
+  xPosition: number,
+  parent: string
+): boolean {
+  return squareDatas.some(
+    (square) => square.xPosition === xPosition && square.parent === parent
+  );
+}
+
+export function findSquarePositionFromVariable(
+  swimlanes: SwimlaneData[],
+  squares: SquareData[],
+  variable: string
+): XYPosition | undefined {
+  let squarePosition: XYPosition = undefined!;
+  squares.forEach((squareData) => {
+    if (squareData.variable === variable) {
+      squarePosition = {
+        x: squareData.xPosition,
+        y: findSwimlaneFromTag(swimlanes, squareData.parent)!.yPosition,
+      };
+    }
+  });
+
+  return squarePosition;
+}
 const Square = ({ data }: any) => {
   return (
     <>
@@ -11,37 +69,37 @@ const Square = ({ data }: any) => {
         type="source"
         position={Position.Right}
         style={{ visibility: "hidden" }}
-        id="source_right"
+        id={SourceDirections.RIGHT}
       />
       <Handle
         type="target"
         position={Position.Left}
         style={{ visibility: "hidden" }}
-        id="target_left"
+        id={TargetDirections.LEFT}
       />
       <Handle
         type="source"
         position={Position.Top}
         style={{ visibility: "hidden" }}
-        id="source_top"
+        id={SourceDirections.TOP}
       />
       <Handle
         type="target"
         position={Position.Top}
         style={{ visibility: "hidden" }}
-        id="target_top"
+        id={TargetDirections.TOP}
       />
       <Handle
         type="source"
         position={Position.Bottom}
         style={{ visibility: "hidden" }}
-        id="source_bottom"
+        id={SourceDirections.BOTTOM}
       />
       <Handle
         type="target"
         position={Position.Bottom}
         style={{ visibility: "hidden" }}
-        id="target_bottom"
+        id={TargetDirections.BOTTOM}
       />
     </>
   );

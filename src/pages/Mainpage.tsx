@@ -1,239 +1,182 @@
-import React, { useCallback, useEffect, useState } from "react";
-import ReactFlow, {
-  MarkerType,
-  MiniMap,
-  XYPosition,
-  addEdge,
-  useEdgesState,
-  useNodesState,
-} from "reactflow";
+import React, { useEffect, useState } from "react";
+import ReactFlow, { MarkerType, useEdgesState, useNodesState } from "reactflow";
 
-import Swimlane from "../components/Swimlane";
+import Swimlane, { SWIMLANE_HEIGHT } from "../components/Swimlane";
 
 import "reactflow/dist/style.css";
 import {
   DiagramObjects,
-  SquareData,
-  SwimlaneData,
-  SwimlaneWithSquaresData,
-  SwimlaneObject,
-  DiagramInputData,
-  SwimlaneInputData,
   DiagramData,
-  squareInputData,
+  SwimlaneData,
+  SquareData,
   EdgeData,
-  EdgeInputData,
-  SquareObject,
 } from "../models/Model";
-import Square from "../components/Square";
+
+import Square, {
+  SQUARE_SIZE,
+  SQUARE_STARTING_X,
+  findEdgeHandleSource,
+  findEdgeHandleTarget,
+  findSquarePositionFromVariable,
+  isSquareSlotOccupied,
+} from "../components/Square";
 
 const nodeTypes = {
   swimlane: Swimlane,
   square: Square,
 };
 
-const SWIMLANE_HEIGHT = 150;
-const SQUARE_WIDTH = 100;
-const SQUARE_SPACING = 50;
-const NODE_STARTING_X = 40;
-const SQUARE_SIZE = SQUARE_WIDTH + SQUARE_SPACING;
-
 export default function MainPage() {
   const [nodes, setNodes] = useNodesState<DiagramObjects[]>([]);
   const [edges, setEdges] = useEdgesState([]);
 
-  function textToObjectData(): DiagramInputData {
+  const [isThereError, setIsThereError] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
+  const [textareaContent, setTextareaContent] = useState(
+    "Swimlane1{\n" +
+      " variable1:name1\n" +
+      "}\n" +
+      "Swimlane2{\n" +
+      " variable2:name2\n" +
+      " variable3:name3\n" +
+      " variable4:name4\n" +
+      "}\n" +
+      "Swimlane1{\n" +
+      " variable5:name5\n" +
+      "} \n" +
+      "\n" +
+      "variable1-->variable2\n" +
+      "variable2-->variable3\n" +
+      "variable3-->variable4\n" +
+      "variable3-->variable5\n" +
+      "variable4-->variable5\n"
+  );
+
+  useEffect(() => {
+    dataToDiagram(textToData());
+  }, []);
+
+  function textToData(): DiagramData {
     let lines: string[] = textareaContent.split(/\r?\n/);
 
-    let swimlaneInputDatas: SwimlaneInputData[] = [];
-    let squaresInSwimlane: squareInputData[] = [];
-    let edgeInputaData: EdgeInputData[] = [];
+    let swimlaneTag = "";
+
+    let brackets: string[] = [];
+
+    let squareXPosition = SQUARE_STARTING_X;
+    let squareDatas: SquareData[] = [];
+
     let alreadyAddedSwimlanes: string[] = [];
-
-    lines.forEach((line) => {
-      if (!line.endsWith(";")) return;
-      line = line.substring(0, line.length - 1);
-
-      let words: string[] = line.split(":".trim());
-      //if arrow
-      if (line.includes("-->")) {
-        let from: string = line.substring(0, line.indexOf("-->"));
-        let to: string = line.substring(line.indexOf("-->") + 3, line.length);
-        if (!doesEdgeVariablesExist(swimlaneInputDatas, from, to)) return;
-        edgeInputaData.push({ source: from, target: to });
+    let swimlaneDatas: SwimlaneData[] = [];
+    lines.forEach((line: string) => {
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] === "}") brackets.push("}");
+        if (line[i] === "{") brackets.push("{");
       }
-      //if swimlane
-      else if (line[0] != " " && line.trim().length > 0) {
-        if (alreadyAddedSwimlanes.includes(words[0])) {
-          squaresInSwimlane = swimlaneInputDatas.find(
-            (swimlane) => swimlane.tag === words[0]
-          )!.squares;
-          console.log("aaaa");
-        } else {
-          squaresInSwimlane = [];
-          let swimlaneTextGroup: SwimlaneInputData = {
-            tag: words[0],
-            squares: squaresInSwimlane,
+
+      if (line.trim().at(-1) === "{") {
+        swimlaneTag = line.substring(0, line.trim().length - 1).trim();
+        if (!alreadyAddedSwimlanes.includes(swimlaneTag)) {
+          let swimlaneTextGroup: SwimlaneData = {
+            type: "swimlane",
+            yPosition: SWIMLANE_HEIGHT * alreadyAddedSwimlanes.length,
+            tag: swimlaneTag,
+            width: 0,
           };
-          swimlaneInputDatas.push(swimlaneTextGroup);
-          alreadyAddedSwimlanes.push(words[0]);
+          swimlaneDatas.push(swimlaneTextGroup);
+          alreadyAddedSwimlanes.push(swimlaneTag);
         }
-
-        //if square
-      } else if (line[0] == " " && line.trim().length > 0) {
-        squaresInSwimlane.push({ variable: words[0].trim(), label: words[1] });
-      }
-    });
-
-    return { swimlanes: swimlaneInputDatas, edges: edgeInputaData };
-  }
-
-  function doesEdgeVariablesExist(
-    swimlaneInputDatas: SwimlaneInputData[],
-    from: string,
-    to: string
-  ): boolean {
-    let fromExists: boolean = false;
-    let toExists: boolean = false;
-    swimlaneInputDatas.forEach((swimlaneInputData) =>
-      swimlaneInputData.squares.forEach((square) => {
-        if (square.variable == from) fromExists = true;
-        if (square.variable == to) toExists = true;
-      })
-    );
-
-    return fromExists && toExists;
-  }
-
-  function findLongestSwimlane(swimlanes: SwimlaneInputData[]): number {
-    let squareCounter = 0;
-
-    swimlanes.forEach((swimlane) => {
-      let xPositions: number[] = [];
-      swimlane.squares.forEach(() => {
-        if (
-          xPositions.some(
-            (xPosition) =>
-              NODE_STARTING_X + SQUARE_SIZE * squareCounter == xPosition
-          )
-        )
-          squareCounter++;
-
-        xPositions.push(NODE_STARTING_X + SQUARE_SIZE * squareCounter);
-      });
-    });
-
-    return SQUARE_SIZE + NODE_STARTING_X + SQUARE_SIZE * squareCounter;
-  }
-
-  function isSwimlaneAdded(
-    swimlanes: SwimlaneWithSquaresData[],
-    tag: string
-  ): boolean {
-    return swimlanes.some((swimlane) => swimlane.swimlaneData.tag === tag);
-  }
-  function findSwimlaneFromTag(
-    swimlanes: SwimlaneWithSquaresData[],
-    tag: string
-  ): SwimlaneData | undefined {
-    return swimlanes.find((swimlane) => swimlane.swimlaneData.tag === tag)
-      ?.swimlaneData;
-  }
-
-  function refineObjectData(): DiagramData {
-    let inputData: DiagramInputData = textToObjectData();
-    let squareCounter = 0;
-    let swimlaneCounter = 0;
-    let swimlaneDatas: SwimlaneWithSquaresData[] = [];
-    let longestSwimlane = findLongestSwimlane(inputData.swimlanes);
-
-    inputData.swimlanes.forEach((swimlane) => {
-      let swimlaneData = {
-        type: "swimlane",
-        tag: swimlane.tag,
-        yPosition: SWIMLANE_HEIGHT * swimlaneCounter,
-        width: longestSwimlane,
-      };
-
-      swimlaneCounter++;
-
-      let squareDatas: SquareData[] = [];
-      swimlane.squares.forEach((square) => {
-        if (
-          squareDatas.some(
-            (squareData) =>
-              squareData.xPosition ==
-              NODE_STARTING_X + SQUARE_SIZE * squareCounter
-          )
-        )
-          squareCounter++;
+      } else if (brackets.at(-1) === "{" && line.trim().length > 0) {
+        if (isSquareSlotOccupied(squareDatas, squareXPosition, swimlaneTag))
+          squareXPosition += SQUARE_SIZE;
+        let words: string[] = line.split(":".trim());
 
         squareDatas.push({
           type: "square",
-          parentId: swimlane.tag,
-          variable: square.variable.trim(),
-          label: square.label,
-          xPosition: NODE_STARTING_X + SQUARE_SIZE * squareCounter,
-        });
-      });
-
-      swimlaneDatas.push({
-        swimlaneData: swimlaneData,
-        squareDatas: squareDatas,
-      });
-    });
-
-    let edgeDatas: EdgeData[] = [];
-    inputData.edges.forEach((edge) => {
-      edgeDatas.push({
-        id: edge.source.concat(edge.target),
-        source: edge.source,
-        target: edge.target,
-      });
-    });
-
-    return { swimlaneDatas: swimlaneDatas, edgeDatas: edgeDatas };
-  }
-
-  function dataToDiagram() {
-    let diagramData: DiagramData = refineObjectData();
-    let swimlaneObjects: any = [];
-    diagramData.swimlaneDatas.forEach(
-      (swimlaneDataGroup: SwimlaneWithSquaresData) => {
-        // Swimlanes
-        swimlaneObjects.push({
-          id: swimlaneDataGroup.swimlaneData.tag,
-          type: swimlaneDataGroup.swimlaneData.type,
-          data: {
-            tag: swimlaneDataGroup.swimlaneData.tag,
-            width: swimlaneDataGroup.swimlaneData.width,
-          },
-          position: { x: 0, y: swimlaneDataGroup.swimlaneData.yPosition },
-        });
-
-        // Squares
-        swimlaneDataGroup.squareDatas.forEach((squareData) => {
-          swimlaneObjects.push({
-            id: squareData.variable,
-            type: squareData.type,
-            data: { label: squareData.label },
-            position: { x: squareData.xPosition, y: 50 },
-            parentId: squareData.parentId,
-          });
+          variable: words[0].trim(),
+          label: words[1],
+          xPosition: squareXPosition,
+          parent: swimlaneTag,
         });
       }
+    });
+
+    swimlaneDatas.forEach(
+      (swimlane) => (swimlane.width = SQUARE_SIZE + squareXPosition)
     );
 
-    let edges: any[] = [];
+    let edgeInputaData: EdgeData[] = [];
+    lines.forEach((line) => {
+      if (line.includes("-->")) {
+        let from: string = line.substring(0, line.indexOf("-->"));
+        let to: string = line.substring(line.indexOf("-->") + 3, line.length);
 
-    diagramData.edgeDatas.forEach((edge) => {
+        if (!doesEdgeVariablesExist(squareDatas, from, to)) return;
+
+        edgeInputaData.push({ id: from.concat(to), source: from, target: to });
+      }
+    });
+    console.log(brackets);
+
+    setIsThereError(isThereParsingError(brackets));
+    console.log(isThereError);
+    return {
+      swimlanes: swimlaneDatas,
+      squares: squareDatas,
+      edges: edgeInputaData,
+    };
+  }
+
+  function doesEdgeVariablesExist(
+    squares: SquareData[],
+    from: string,
+    to: string
+  ): boolean {
+    return (
+      squares.some((square) => square.variable === from) &&
+      squares.some((square) => square.variable === to)
+    );
+  }
+
+  function dataToDiagram(diagramData: DiagramData) {
+    let swimlaneObjects: any = [];
+
+    diagramData.swimlanes.forEach((swimlane) => {
+      swimlaneObjects.push({
+        id: swimlane.tag,
+        type: swimlane.type,
+        data: {
+          tag: swimlane.tag,
+          width: swimlane.width,
+        },
+        position: { x: 0, y: swimlane.yPosition },
+      });
+    });
+
+    diagramData.squares.forEach((square) => {
+      swimlaneObjects.push({
+        id: square.variable,
+        type: square.type,
+        data: { label: square.label },
+        position: { x: square.xPosition, y: 50 },
+        parentId: square.parent,
+      });
+    });
+
+    setNodes(swimlaneObjects);
+
+    let edges: any[] = [];
+    diagramData.edges.forEach((edge) => {
       let sourcePosition = findSquarePositionFromVariable(
-        diagramData.swimlaneDatas,
+        diagramData.swimlanes,
+        diagramData.squares,
         edge.source
       );
 
       let targetPosition = findSquarePositionFromVariable(
-        diagramData.swimlaneDatas,
+        diagramData.swimlanes,
+        diagramData.squares,
         edge.target
       );
 
@@ -255,84 +198,46 @@ export default function MainPage() {
     });
 
     setEdges(edges);
-    setNodes(swimlaneObjects);
   }
 
-  function findSquarePositionFromVariable(
-    swimlaneDatas: SwimlaneWithSquaresData[],
-    variable: string
-  ): XYPosition | undefined {
-    let squarePosition: XYPosition = undefined!;
-    swimlaneDatas.forEach((swimlaneData) =>
-      swimlaneData.squareDatas.forEach((squareData) => {
-        if (squareData.variable === variable) {
-          squarePosition = {
-            x: squareData.xPosition,
-            y: swimlaneData.swimlaneData.yPosition,
-          };
-        }
-      })
-    );
-
-    return squarePosition;
+  function isThereParsingError(brackets: string[]): boolean {
+    if (!areBracketsCorrect(brackets)) {
+      setErrorMsg("ERROR: Brackets not closed");
+      return true;
+    }
+    return false;
   }
 
-  function findEdgeHandleSource(from: XYPosition, to: XYPosition): string {
-    if (from.x == to.x && from.y > to.y) return "source_top";
-    if (from.x == to.x && from.y < to.y) return "source_bottom";
-    if (from.x < to.x) return "source_right";
+  function areBracketsCorrect(brackets: string[]): boolean {
+    if (brackets.length % 2 !== 0) return false;
 
-    return "source_right";
+    for (let i = 0; i < brackets.length - 1; i++) {
+      if (i % 2 === 0 && brackets[i] !== "{") return false;
+      if (i % 2 !== 0 && brackets[i] !== "}") return false;
+    }
+    return true;
   }
-
-  function findEdgeHandleTarget(from: XYPosition, to: XYPosition): string {
-    if (from.x == to.x && from.y > to.y) return "target_bottom";
-    if (from.x == to.x && from.y < to.y) return "target_top";
-    if (from.x < to.x) return "target_left";
-
-    return "target_left";
-  }
-
-  const [textareaContent, setTextareaContent] = useState(
-    "Swimlane1;\n" +
-      " variable1:name1;\n" +
-      "Swimlane2;\n" +
-      " variable2:name2;\n" +
-      " variable3:name3;\n" +
-      " variable4:name4;\n" +
-      "Swimlane1;\n" +
-      " variable5:name5;\n" +
-      "\n" +
-      "variable1-->variable2;\n" +
-      "variable2-->variable3;\n" +
-      "variable3-->variable4;\n" +
-      "variable3-->variable5;\n" +
-      "variable4-->variable5;\n"
-  );
-
-  useEffect(() => {
-    dataToDiagram();
-  }, []);
-
-  const registerKey = () => {
-    dataToDiagram();
-  };
 
   return (
     <div className="mainpage">
       <textarea
         className="textarea"
         onChange={(e) => setTextareaContent(e.target.value)}
-        onKeyUp={registerKey}
+        onKeyUp={() => dataToDiagram(textToData())}
       >
         {textareaContent}
       </textarea>
+
       <div className="reactflow-container">
-        <ReactFlow
-          nodeTypes={nodeTypes}
-          nodes={nodes}
-          edges={edges}
-        ></ReactFlow>
+        {isThereError ? (
+          <div className="errormessage-text"> {errorMsg} </div>
+        ) : (
+          <ReactFlow
+            nodeTypes={nodeTypes}
+            nodes={nodes}
+            edges={edges}
+          ></ReactFlow>
+        )}
       </div>
     </div>
   );

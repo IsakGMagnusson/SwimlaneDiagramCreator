@@ -1,34 +1,9 @@
 // Models for grouping objects from text
-export interface DiagramInputData {
-  swimlanes: SwimlaneInputData[];
-  edges: EdgeInputData[];
-}
-export interface SwimlaneInputData {
-  tag: string;
-  squares: squareInputData[];
-}
-
-export interface squareInputData {
-  variable: string;
-  label: string;
-}
-
-export interface EdgeInputData {
-  source: string;
-  target: string;
-}
-
-// Models for grouping objects with data
 export interface DiagramData {
-  swimlaneDatas: SwimlaneWithSquaresData[];
-  edgeDatas: EdgeData[];
+  swimlanes: SwimlaneData[];
+  squares: SquareData[];
+  edges: EdgeData[];
 }
-
-export interface SwimlaneWithSquaresData {
-  swimlaneData: SwimlaneData;
-  squareDatas: SquareData[];
-}
-
 export interface SwimlaneData {
   type: string;
   tag: string;
@@ -37,11 +12,11 @@ export interface SwimlaneData {
 }
 
 export interface SquareData {
-  type: string;
   variable: string;
   label: string;
   xPosition: number;
-  parentId: string;
+  parent: string;
+  type: string;
 }
 
 export interface EdgeData {
