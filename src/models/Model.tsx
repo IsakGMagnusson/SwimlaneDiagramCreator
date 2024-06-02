@@ -3,6 +3,7 @@ export interface DiagramData {
   swimlanes: SwimlaneData[];
   squares: SquareData[];
   edges: EdgeData[];
+  hasParsingError: boolean;
 }
 export interface SwimlaneData {
   type: string;
@@ -47,4 +48,10 @@ export interface SquareObject extends DiagramObjects {
 interface XYPosition {
   x: number;
   y: number;
+}
+
+//Error
+export interface ParsingErrorObject {
+  hasError: boolean;
+  errorMessage?: string;
 }

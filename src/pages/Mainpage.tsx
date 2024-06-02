@@ -20,6 +20,7 @@ import Square, {
   findSquarePositionFromVariable,
   isSquareSlotOccupied,
 } from "../components/Square";
+import { doesParseHaveError as doesParseHaveError } from "../util/ErrorHandling";
 
 const nodeTypes = {
   swimlane: Swimlane,
@@ -30,8 +31,8 @@ export default function MainPage() {
   const [nodes, setNodes] = useNodesState<DiagramObjects[]>([]);
   const [edges, setEdges] = useEdgesState([]);
 
-  const [isThereError, setIsThereError] = useState<boolean>(false);
-  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [isParsingValid, setIsParsingValid] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const [textareaContent, setTextareaContent] = useState(
     "Swimlane1{\n" +
@@ -50,31 +51,29 @@ export default function MainPage() {
       "variable2-->variable3\n" +
       "variable3-->variable4\n" +
       "variable3-->variable5\n" +
-      "variable4-->variable5\n"
+      "variable4-->variable5"
   );
-
-  useEffect(() => {
-    dataToDiagram(textToData());
-  }, []);
 
   function textToData(): DiagramData {
     let lines: string[] = textareaContent.split(/\r?\n/);
 
     let swimlaneTag = "";
+    let squareXPosition = SQUARE_STARTING_X;
+    const arrowSymbol = "-->";
 
     let brackets: string[] = [];
-
-    let squareXPosition = SQUARE_STARTING_X;
-    let squareDatas: SquareData[] = [];
-
     let alreadyAddedSwimlanes: string[] = [];
+
     let swimlaneDatas: SwimlaneData[] = [];
+    let squareDatas: SquareData[] = [];
+    let edgeInputaData: EdgeData[] = [];
     lines.forEach((line: string) => {
       for (let i = 0; i < line.length; i++) {
         if (line[i] === "}") brackets.push("}");
         if (line[i] === "{") brackets.push("{");
       }
 
+      //Swimlane
       if (line.trim().at(-1) === "{") {
         swimlaneTag = line.substring(0, line.trim().length - 1).trim();
         if (!alreadyAddedSwimlanes.includes(swimlaneTag)) {
@@ -87,6 +86,7 @@ export default function MainPage() {
           swimlaneDatas.push(swimlaneTextGroup);
           alreadyAddedSwimlanes.push(swimlaneTag);
         }
+        //Square
       } else if (brackets.at(-1) === "{" && line.trim().length > 0) {
         if (isSquareSlotOccupied(squareDatas, squareXPosition, swimlaneTag))
           squareXPosition += SQUARE_SIZE;
@@ -99,47 +99,41 @@ export default function MainPage() {
           xPosition: squareXPosition,
           parent: swimlaneTag,
         });
-      }
-    });
 
-    swimlaneDatas.forEach(
-      (swimlane) => (swimlane.width = SQUARE_SIZE + squareXPosition)
-    );
+        swimlaneDatas.forEach(
+          (swimlane) => (swimlane.width = SQUARE_SIZE + squareXPosition)
+        );
 
-    let edgeInputaData: EdgeData[] = [];
-    lines.forEach((line) => {
-      if (line.includes("-->")) {
-        let from: string = line.substring(0, line.indexOf("-->"));
-        let to: string = line.substring(line.indexOf("-->") + 3, line.length);
-
-        if (!doesEdgeVariablesExist(squareDatas, from, to)) return;
+        //Arrow
+      } else if (line.includes(arrowSymbol)) {
+        let from: string = line.substring(0, line.indexOf(arrowSymbol));
+        let to: string = line.substring(
+          line.indexOf(arrowSymbol) + arrowSymbol.length,
+          line.length
+        );
 
         edgeInputaData.push({ id: from.concat(to), source: from, target: to });
       }
     });
-    console.log(brackets);
 
-    setIsThereError(isThereParsingError(brackets));
-    console.log(isThereError);
+    const ErrorObject = doesParseHaveError(
+      brackets,
+      edgeInputaData,
+      squareDatas
+    );
+    setIsParsingValid(!ErrorObject.hasError);
+    setErrorMessage(ErrorObject.errorMessage!);
+
     return {
       swimlanes: swimlaneDatas,
       squares: squareDatas,
       edges: edgeInputaData,
+      hasParsingError: ErrorObject.hasError,
     };
   }
 
-  function doesEdgeVariablesExist(
-    squares: SquareData[],
-    from: string,
-    to: string
-  ): boolean {
-    return (
-      squares.some((square) => square.variable === from) &&
-      squares.some((square) => square.variable === to)
-    );
-  }
-
   function dataToDiagram(diagramData: DiagramData) {
+    if (diagramData.hasParsingError) return;
     let swimlaneObjects: any = [];
 
     diagramData.swimlanes.forEach((swimlane) => {
@@ -200,23 +194,9 @@ export default function MainPage() {
     setEdges(edges);
   }
 
-  function isThereParsingError(brackets: string[]): boolean {
-    if (!areBracketsCorrect(brackets)) {
-      setErrorMsg("ERROR: Brackets not closed");
-      return true;
-    }
-    return false;
-  }
-
-  function areBracketsCorrect(brackets: string[]): boolean {
-    if (brackets.length % 2 !== 0) return false;
-
-    for (let i = 0; i < brackets.length - 1; i++) {
-      if (i % 2 === 0 && brackets[i] !== "{") return false;
-      if (i % 2 !== 0 && brackets[i] !== "}") return false;
-    }
-    return true;
-  }
+  useEffect(() => {
+    dataToDiagram(textToData());
+  }, [isParsingValid]);
 
   return (
     <div className="mainpage">
@@ -229,14 +209,14 @@ export default function MainPage() {
       </textarea>
 
       <div className="reactflow-container">
-        {isThereError ? (
-          <div className="errormessage-text"> {errorMsg} </div>
-        ) : (
+        {isParsingValid ? (
           <ReactFlow
             nodeTypes={nodeTypes}
             nodes={nodes}
             edges={edges}
           ></ReactFlow>
+        ) : (
+          <div className="errormessage-text"> {errorMessage} </div>
         )}
       </div>
     </div>
