@@ -3,7 +3,7 @@ import { Handle, Position, XYPosition } from "reactflow";
 import { SquareData, SwimlaneData } from "../models/Model";
 import { findSwimlaneFromTag } from "./Swimlane";
 
-export const SQUARE_WIDTH = 100;
+export const SQUARE_WIDTH = 120;
 export const SQUARE_SPACING = 50;
 export const SQUARE_STARTING_X = 40;
 export const SQUARE_SIZE = SQUARE_WIDTH + SQUARE_SPACING;
@@ -62,7 +62,7 @@ export function findSquarePositionFromVariable(
 const Square = ({ data }: any) => {
   return (
     <>
-      <div className="square-body">
+      <div className="square-body" style={{ width: SQUARE_WIDTH + "px" }}>
         <div className="square-label-text">{data.label}</div>
       </div>
       <Handle

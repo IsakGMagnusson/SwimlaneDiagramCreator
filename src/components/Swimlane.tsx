@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { SwimlaneData } from "../models/Model";
 
 export const SWIMLANE_HEIGHT = 150;

@@ -55,3 +55,9 @@ export interface ParsingErrorObject {
   hasError: boolean;
   errorMessage?: string;
 }
+
+//Dictionary
+export interface Dictionary {
+  key: string;
+  value: string;
+}

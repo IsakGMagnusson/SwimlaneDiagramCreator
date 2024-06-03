@@ -19,12 +19,22 @@ code {
   display: flex;
 }
 
-.textarea {
+.sidebar {
   width: 20%;
-  height: 99vh;
+  height: 100vh;
+}
+
+.textarea {
+  width: 100%;
+  height: 90%;
   resize: none;
-  font-size: small;
-  align-items: flex-start;
+  font-size: large;
+}
+
+.export-button {
+  width: 100%;
+  height: 8%;
+  font-size: xx-large;
 }
 
 .reactflow-container {

@@ -21,6 +21,26 @@ import Square, {
   isSquareSlotOccupied,
 } from "../components/Square";
 import { doesParseHaveError as doesParseHaveError } from "../util/ErrorHandling";
+import { buildXML } from "../util/XMLBuilder";
+
+const startString: string =
+  "Swimlane1{\n" +
+  " variable1:name1\n" +
+  "}\n" +
+  "Swimlane2{\n" +
+  " variable2:name2\n" +
+  " variable3:name3\n" +
+  " variable4:name4\n" +
+  "}\n" +
+  "Swimlane1{\n" +
+  " variable5:name5\n" +
+  "} \n" +
+  "\n" +
+  "variable1-->variable2\n" +
+  "variable2-->variable3\n" +
+  "variable3-->variable4\n" +
+  "variable3-->variable5\n" +
+  "variable4-->variable5";
 
 const nodeTypes = {
   swimlane: Swimlane,
@@ -34,25 +54,7 @@ export default function MainPage() {
   const [isParsingValid, setIsParsingValid] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const [textareaContent, setTextareaContent] = useState(
-    "Swimlane1{\n" +
-      " variable1:name1\n" +
-      "}\n" +
-      "Swimlane2{\n" +
-      " variable2:name2\n" +
-      " variable3:name3\n" +
-      " variable4:name4\n" +
-      "}\n" +
-      "Swimlane1{\n" +
-      " variable5:name5\n" +
-      "} \n" +
-      "\n" +
-      "variable1-->variable2\n" +
-      "variable2-->variable3\n" +
-      "variable3-->variable4\n" +
-      "variable3-->variable5\n" +
-      "variable4-->variable5"
-  );
+  const [textareaContent, setTextareaContent] = useState(startString);
 
   function textToData(): DiagramData {
     let lines: string[] = textareaContent.split(/\r?\n/);
@@ -100,10 +102,6 @@ export default function MainPage() {
           parent: swimlaneTag,
         });
 
-        swimlaneDatas.forEach(
-          (swimlane) => (swimlane.width = SQUARE_SIZE + squareXPosition)
-        );
-
         //Arrow
       } else if (line.includes(arrowSymbol)) {
         let from: string = line.substring(0, line.indexOf(arrowSymbol));
@@ -115,6 +113,10 @@ export default function MainPage() {
         edgeInputaData.push({ id: from.concat(to), source: from, target: to });
       }
     });
+
+    swimlaneDatas.forEach(
+      (swimlane) => (swimlane.width = SQUARE_SIZE + squareXPosition)
+    );
 
     const ErrorObject = doesParseHaveError(
       brackets,
@@ -200,13 +202,21 @@ export default function MainPage() {
 
   return (
     <div className="mainpage">
-      <textarea
-        className="textarea"
-        onChange={(e) => setTextareaContent(e.target.value)}
-        onKeyUp={() => dataToDiagram(textToData())}
-      >
-        {textareaContent}
-      </textarea>
+      <div className="sidebar">
+        <textarea
+          className="textarea"
+          onChange={(e) => setTextareaContent(e.target.value)}
+          onKeyUp={() => dataToDiagram(textToData())}
+        >
+          {textareaContent}
+        </textarea>
+        <button
+          className="export-button"
+          onClick={() => buildXML(textToData())}
+        >
+          Export Draw.IO
+        </button>
+      </div>
 
       <div className="reactflow-container">
         {isParsingValid ? (
