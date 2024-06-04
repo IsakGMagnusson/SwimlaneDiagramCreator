@@ -1,3 +1,4 @@
+import { SourceDirections } from "../components/Square";
 import { DiagramData } from "../models/Model";
 
 export function buildXML(diagramData: DiagramData) {
@@ -7,13 +8,14 @@ export function buildXML(diagramData: DiagramData) {
   }
 
   diagramData = measurementConvert(diagramData);
-  let xml: string = '<?xml version="1.0" encoding="UTF-8"?>';
-  xml += "<mxfile>";
-  xml += "<diagram>";
-  xml += "<mxGraphModel>";
-  xml += "<root>";
-  xml += '<mxCell id="0" />';
-  xml += '<mxCell id="1" parent="0" />';
+  let xml: string =
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    "<mxfile>" +
+    "<diagram>" +
+    "<mxGraphModel>" +
+    "<root>" +
+    '<mxCell id="0" />' +
+    '<mxCell id="1" parent="0" />';
 
   diagramData.swimlanes.forEach((swimlane) => {
     xml +=
@@ -29,10 +31,14 @@ export function buildXML(diagramData: DiagramData) {
       "</mxCell>";
   });
 
-  xml += "</root>";
-  xml += "</mxGraphModel>";
-  xml += "</diagram>";
-  xml += "</mxfile>";
+  diagramData.edges.forEach((edgeData) => {
+    xml +=
+      `<mxCell id=\"${edgeData.id}\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;${edgeData.sourceHandle};exitDx=0;exitDy=0;\" edge=\"1\" source=\"${edgeData.source}\" target=\"${edgeData.target}\" parent=\"1\">` +
+      `<mxGeometry relative=\"1\" as=\"geometry\" />` +
+      "</mxCell>";
+  });
+
+  xml += "</root>" + "</mxGraphModel>" + "</diagram>" + "</mxfile>";
 
   console.log(xml);
 }
@@ -43,6 +49,26 @@ function measurementConvert(diagramData: DiagramData): DiagramData {
   diagramData.swimlanes.forEach((swimlane) => {
     swimlane.yPosition += swimlaneCounter * swimlaneheight_difference;
     swimlaneCounter++;
+  });
+
+  //exitX=0.5, exitY=0.25 up
+  //exitX=0.5, exitY=0.5 right
+  //exitX=0, exitY=0.5 left
+  //exitX=0.5, exitY=1 down
+  diagramData.edges.forEach((edge) => {
+    switch (edge.sourceHandle) {
+      case SourceDirections.TOP:
+        edge.sourceHandle = "exitX=0.5, exitY=0.25";
+        break;
+      case SourceDirections.RIGHT:
+        edge.sourceHandle = "exitX=0.5, exitY=0.5";
+        break;
+      case SourceDirections.BOTTOM:
+        edge.sourceHandle = "exitX=0.5, exitY=1";
+        break;
+      default:
+        edge.sourceHandle = "exitX=0.5, exitY=0.25";
+    }
   });
 
   return {

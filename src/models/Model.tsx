@@ -24,6 +24,8 @@ export interface EdgeData {
   id: string;
   source: string;
   target: string;
+  sourceHandle: string;
+  targetHandle: string;
 }
 
 //Models for generating ReactFlow objects
@@ -54,10 +56,4 @@ interface XYPosition {
 export interface ParsingErrorObject {
   hasError: boolean;
   errorMessage?: string;
-}
-
-//Dictionary
-export interface Dictionary {
-  key: string;
-  value: string;
 }

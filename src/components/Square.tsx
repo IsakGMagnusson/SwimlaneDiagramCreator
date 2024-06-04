@@ -8,7 +8,7 @@ export const SQUARE_SPACING = 50;
 export const SQUARE_STARTING_X = 40;
 export const SQUARE_SIZE = SQUARE_WIDTH + SQUARE_SPACING;
 
-enum SourceDirections {
+export enum SourceDirections {
   RIGHT = "source_right",
   TOP = "source_top",
   BOTTOM = "source_bottom",

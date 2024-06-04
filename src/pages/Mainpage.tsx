@@ -110,7 +110,25 @@ export default function MainPage() {
           line.length
         );
 
-        edgeInputaData.push({ id: from.concat(to), source: from, target: to });
+        let sourcePosition = findSquarePositionFromVariable(
+          swimlaneDatas,
+          squareDatas,
+          from
+        );
+
+        let targetPosition = findSquarePositionFromVariable(
+          swimlaneDatas,
+          squareDatas,
+          to
+        );
+
+        edgeInputaData.push({
+          id: from.concat(to),
+          source: from,
+          target: to,
+          sourceHandle: findEdgeHandleSource(sourcePosition!, targetPosition!),
+          targetHandle: findEdgeHandleTarget(sourcePosition!, targetPosition!),
+        });
       }
     });
 
@@ -164,25 +182,13 @@ export default function MainPage() {
 
     let edges: any[] = [];
     diagramData.edges.forEach((edge) => {
-      let sourcePosition = findSquarePositionFromVariable(
-        diagramData.swimlanes,
-        diagramData.squares,
-        edge.source
-      );
-
-      let targetPosition = findSquarePositionFromVariable(
-        diagramData.swimlanes,
-        diagramData.squares,
-        edge.target
-      );
-
       edges.push({
         id: edge.id,
         type: "smoothstep",
         source: edge.source,
         target: edge.target,
-        sourceHandle: findEdgeHandleSource(sourcePosition!, targetPosition!),
-        targetHandle: findEdgeHandleTarget(sourcePosition!, targetPosition!),
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
         style: { stroke: "#fff" },
         markerEnd: {
           type: MarkerType.ArrowClosed,
