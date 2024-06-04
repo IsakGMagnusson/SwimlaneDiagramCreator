@@ -46,8 +46,8 @@ export function findSquarePositionFromVariable(
   swimlanes: SwimlaneData[],
   squares: SquareData[],
   variable: string
-): XYPosition | undefined {
-  let squarePosition: XYPosition = undefined!;
+): XYPosition {
+  let squarePosition: XYPosition = { x: -1, y: -1 };
   squares.forEach((squareData) => {
     if (squareData.variable === variable) {
       squarePosition = {

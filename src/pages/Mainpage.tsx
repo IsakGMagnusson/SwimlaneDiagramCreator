@@ -20,7 +20,7 @@ import Square, {
   findSquarePositionFromVariable,
   isSquareSlotOccupied,
 } from "../components/Square";
-import { doesParseHaveError as doesParseHaveError } from "../util/ErrorHandling";
+import { doesParseHaveError as checkForParseError } from "../util/ErrorHandling";
 import { buildXML } from "../util/XMLBuilder";
 
 const startString: string =
@@ -126,8 +126,8 @@ export default function MainPage() {
           id: from.concat(to),
           source: from,
           target: to,
-          sourceHandle: findEdgeHandleSource(sourcePosition!, targetPosition!),
-          targetHandle: findEdgeHandleTarget(sourcePosition!, targetPosition!),
+          sourceHandle: findEdgeHandleSource(sourcePosition, targetPosition),
+          targetHandle: findEdgeHandleTarget(sourcePosition, targetPosition),
         });
       }
     });
@@ -136,7 +136,7 @@ export default function MainPage() {
       (swimlane) => (swimlane.width = SQUARE_SIZE + squareXPosition)
     );
 
-    const ErrorObject = doesParseHaveError(
+    const ErrorObject = checkForParseError(
       brackets,
       edgeInputaData,
       squareDatas
