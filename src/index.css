@@ -69,7 +69,7 @@ code {
 
 .textarea {
   width: 100%;
-  height: 90%;
+  height: 95%;
   resize: none;
   font-size: large;
   vertical-align: top;
@@ -81,7 +81,7 @@ code {
 
 .export-button {
   width: 100%;
-  height: 10%;
+  height: 5%;
   font-size: large;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -131,7 +131,8 @@ code {
   width: 100%;
   height: 100%;
   font-size: xx-large;
-  color: rgb(136, 0, 0);
+  color: rgb(126, 1, 1);
+  white-space: pre-wrap;
 }
 
 .react-flow__node {

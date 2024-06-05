@@ -3,7 +3,7 @@ import { DiagramData } from "../models/Model";
 import xmlFormat from "xml-formatter";
 
 export function buildXML(diagramData: DiagramData): string {
-  if (diagramData.hasParsingError) return "Error: parse error";
+  if (diagramData.hasParsingError) return "<error> Error: parse error </error>";
 
   diagramData = measurementConvert(diagramData);
   let xml: string =

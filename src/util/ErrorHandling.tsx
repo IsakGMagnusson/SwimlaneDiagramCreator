@@ -5,34 +5,53 @@ export function doesParseHaveError(
   edgeDatas: EdgeData[],
   squareDatas: SquareData[]
 ): ParsingErrorObject {
-  if (!areBracketsCorrect(brackets))
-    return {
-      hasError: true,
-      errorMessage: "ERROR: Brackets not closed!",
-    };
+  let hasError: boolean = false;
+  let errorMessage: string = "";
 
-  if (!doAllEdgeVariablesExist(edgeDatas, squareDatas))
-    return {
-      hasError: true,
-      errorMessage: "ERROR: Edge square does not exist!",
-    };
+  if (!areBracketsCorrect(brackets)) {
+    hasError = true;
+    errorMessage += "ERROR: Brackets not closed!\n";
+  }
 
-  return { hasError: false };
+  if (!doAllSourceVariablesExist(edgeDatas, squareDatas)) {
+    hasError = true;
+    errorMessage += "ERROR: Source-Node does not exist!\n";
+  }
+
+  if (!doAllTargetVariablesExist(edgeDatas, squareDatas)) {
+    hasError = true;
+    errorMessage += "ERROR: Target-Node does not exist!\n";
+  }
+
+  return { hasError: hasError, errorMessage: errorMessage };
 }
 
-function doAllEdgeVariablesExist(
+function doAllSourceVariablesExist(
   edgeDatas: EdgeData[],
   squares: SquareData[]
 ): boolean {
   for (let i = 0; i < edgeDatas.length; i++) {
     let isSourceFound = false;
-    let isTargetFound = false;
 
     for (let j = 0; j < squares.length; j++) {
       if (squares[j].variable === edgeDatas[i].source) isSourceFound = true;
+    }
+    if (!isSourceFound) return false;
+  }
+  return true;
+}
+
+function doAllTargetVariablesExist(
+  edgeDatas: EdgeData[],
+  squares: SquareData[]
+): boolean {
+  for (let i = 0; i < edgeDatas.length; i++) {
+    let isTargetFound = false;
+
+    for (let j = 0; j < squares.length; j++) {
       if (squares[j].variable === edgeDatas[i].target) isTargetFound = true;
     }
-    if (!isSourceFound || !isTargetFound) return false;
+    if (!isTargetFound) return false;
   }
   return true;
 }
