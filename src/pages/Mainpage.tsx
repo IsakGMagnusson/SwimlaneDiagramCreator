@@ -212,7 +212,7 @@ export default function MainPage() {
   }, [isParsingValid]);
 
   function displayXML() {
-    dataToDiagram(textToData());
+    setXML(buildXML(textToData()));
     setdisplayXMLState(!displayXMLState);
   }
 
@@ -233,9 +233,12 @@ export default function MainPage() {
 
       <div className="reactflow-container">
         {displayXMLState ? (
-          <textarea readOnly className="display-xml">
-            {xmlFormat(XML)}
-          </textarea>
+          <div className="display-xml">
+            <div className="display-xml-info">Draw.io xml-format:</div>
+            <textarea readOnly className="display-xml-textarea">
+              {xmlFormat(XML)}
+            </textarea>
+          </div>
         ) : (
           <>
             {isParsingValid ? (

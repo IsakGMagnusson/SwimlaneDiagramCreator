@@ -27,6 +27,30 @@ code {
   background-color: antiquewhite;
   width: 100%;
   height: 100%;
+
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.display-xml-info {
+  background-color: antiquewhite;
+  width: 100%;
+  height: 5%;
+
+  font-size: large;
+  font-weight: bold;
+  text-align: center;
+
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.display-xml-textarea {
+  background-color: antiquewhite;
+  width: 100%;
+  height: 95%;
   resize: none;
   vertical-align: top;
 
@@ -36,8 +60,11 @@ code {
 }
 
 .sidebar {
-  width: 20%;
+  width: 15%;
   height: 100%;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .textarea {
@@ -45,17 +72,25 @@ code {
   height: 90%;
   resize: none;
   font-size: large;
+  vertical-align: top;
+
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .export-button {
   width: 100%;
-  height: 8%;
-  font-size: xx-large;
+  height: 10%;
+  font-size: large;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .reactflow-container {
   background-color: antiquewhite;
-  width: 80%;
+  width: 100%;
   height: 100%;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
