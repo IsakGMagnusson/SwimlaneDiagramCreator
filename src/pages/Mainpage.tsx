@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ReactFlow, { MarkerType, useEdgesState, useNodesState } from "reactflow";
 
 import Swimlane, { SWIMLANE_HEIGHT } from "../components/Swimlane";
+import xmlFormat from "xml-formatter";
 
 import "reactflow/dist/style.css";
 import {
@@ -53,12 +54,14 @@ export default function MainPage() {
 
   const [isParsingValid, setIsParsingValid] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [XML, setXML] = useState<string>("");
+  const [displayXMLState, setdisplayXMLState] = useState(false);
 
   const [textareaContent, setTextareaContent] = useState(startString);
 
   function textToData(): DiagramData {
+    setdisplayXMLState(false);
     let lines: string[] = textareaContent.split(/\r?\n/);
-
     let swimlaneTag = "";
     let squareXPosition = SQUARE_STARTING_X;
     const arrowSymbol = "-->";
@@ -154,6 +157,7 @@ export default function MainPage() {
 
   function dataToDiagram(diagramData: DiagramData) {
     if (diagramData.hasParsingError) return;
+
     let swimlaneObjects: any = [];
 
     diagramData.swimlanes.forEach((swimlane) => {
@@ -204,7 +208,13 @@ export default function MainPage() {
 
   useEffect(() => {
     dataToDiagram(textToData());
+    setXML(buildXML(textToData()));
   }, [isParsingValid]);
+
+  function displayXML() {
+    dataToDiagram(textToData());
+    setdisplayXMLState(!displayXMLState);
+  }
 
   return (
     <div className="mainpage">
@@ -216,23 +226,28 @@ export default function MainPage() {
         >
           {textareaContent}
         </textarea>
-        <button
-          className="export-button"
-          onClick={() => buildXML(textToData())}
-        >
-          Export Draw.IO
+        <button className="export-button" onClick={displayXML}>
+          Toggle xml
         </button>
       </div>
 
       <div className="reactflow-container">
-        {isParsingValid ? (
-          <ReactFlow
-            nodeTypes={nodeTypes}
-            nodes={nodes}
-            edges={edges}
-          ></ReactFlow>
+        {displayXMLState ? (
+          <textarea readOnly className="display-xml">
+            {xmlFormat(XML)}
+          </textarea>
         ) : (
-          <div className="errormessage-text"> {errorMessage} </div>
+          <>
+            {isParsingValid ? (
+              <ReactFlow
+                nodeTypes={nodeTypes}
+                nodes={nodes}
+                edges={edges}
+              ></ReactFlow>
+            ) : (
+              <div className="errormessage-text"> {errorMessage} </div>
+            )}
+          </>
         )}
       </div>
     </div>

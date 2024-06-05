@@ -1,11 +1,9 @@
 import { SourceDirections } from "../components/Square";
 import { DiagramData } from "../models/Model";
+import xmlFormat from "xml-formatter";
 
-export function buildXML(diagramData: DiagramData) {
-  if (diagramData.hasParsingError) {
-    alert("Parse error");
-    return;
-  }
+export function buildXML(diagramData: DiagramData): string {
+  if (diagramData.hasParsingError) return "Error: parse error";
 
   diagramData = measurementConvert(diagramData);
   let xml: string =
@@ -40,7 +38,7 @@ export function buildXML(diagramData: DiagramData) {
 
   xml += "</root>" + "</mxGraphModel>" + "</diagram>" + "</mxfile>";
 
-  console.log(xml);
+  return xmlFormat(xml);
 }
 
 function measurementConvert(diagramData: DiagramData): DiagramData {
