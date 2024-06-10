@@ -5,7 +5,7 @@ import xmlFormat from "xml-formatter";
 export function buildXML(diagramData: DiagramData): string {
   if (diagramData.hasParsingError) return "<error> Error: parse error </error>";
 
-  diagramData = measurementConvert(diagramData);
+  diagramData = convertToDrawIOValues(diagramData);
   let xml: string =
     '<?xml version="1.0" encoding="UTF-8"?>' +
     "<mxfile>" +
@@ -41,7 +41,7 @@ export function buildXML(diagramData: DiagramData): string {
   return xmlFormat(xml);
 }
 
-function measurementConvert(diagramData: DiagramData): DiagramData {
+function convertToDrawIOValues(diagramData: DiagramData): DiagramData {
   const swimlaneheight_difference = 50;
   let swimlaneCounter = 0;
   diagramData.swimlanes.forEach((swimlane) => {

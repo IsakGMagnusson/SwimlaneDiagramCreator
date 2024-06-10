@@ -5,25 +5,21 @@ export function doesParseHaveError(
   edgeDatas: EdgeData[],
   squareDatas: SquareData[]
 ): ParsingErrorObject {
-  let hasError: boolean = false;
-  let errorMessage: string = "";
+  let errorMessages: string[] = [];
 
   if (!areBracketsCorrect(brackets)) {
-    hasError = true;
-    errorMessage += "ERROR: Brackets not closed!\n";
+    errorMessages.push("Brackets not closed");
   }
 
   if (!doAllSourceVariablesExist(edgeDatas, squareDatas)) {
-    hasError = true;
-    errorMessage += "ERROR: Source-Node does not exist!\n";
+    errorMessages.push("Source-Node does not exist");
   }
 
   if (!doAllTargetVariablesExist(edgeDatas, squareDatas)) {
-    hasError = true;
-    errorMessage += "ERROR: Target-Node does not exist!\n";
+    errorMessages.push("Target-Node does not exist");
   }
 
-  return { hasError: hasError, errorMessage: errorMessage };
+  return { hasError: errorMessages.length > 0, errorMessages: errorMessages };
 }
 
 function doAllSourceVariablesExist(

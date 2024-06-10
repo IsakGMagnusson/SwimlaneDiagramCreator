@@ -55,5 +55,5 @@ interface XYPosition {
 //Error
 export interface ParsingErrorObject {
   hasError: boolean;
-  errorMessage?: string;
+  errorMessages?: string[];
 }

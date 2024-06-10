@@ -53,7 +53,7 @@ export default function MainPage() {
   const [edges, setEdges] = useEdgesState([]);
 
   const [isParsingValid, setIsParsingValid] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string[]>([]);
   const [XML, setXML] = useState<string>("");
   const [displayXMLState, setdisplayXMLState] = useState(false);
 
@@ -145,7 +145,7 @@ export default function MainPage() {
       squareDatas
     );
     setIsParsingValid(!ErrorObject.hasError);
-    setErrorMessage(ErrorObject.errorMessage!);
+    setErrorMessage(ErrorObject.errorMessages!);
 
     return {
       swimlanes: swimlaneDatas,
@@ -248,7 +248,13 @@ export default function MainPage() {
                 edges={edges}
               ></ReactFlow>
             ) : (
-              <div className="errormessage-text"> {errorMessage} </div>
+              <div className="errormessage-container">
+                <p className="errormessage-text-header">Errors</p>
+
+                {errorMessage.map((msg) => (
+                  <p className="errormessage-text">{msg}</p>
+                ))}
+              </div>
             )}
           </>
         )}
