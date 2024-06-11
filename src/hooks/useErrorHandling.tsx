@@ -1,25 +1,35 @@
+import { useState } from "react";
 import { EdgeData, SquareData, ParsingErrorObject } from "../models/Model";
 
-export function doesParseHaveError(
-  brackets: string[],
-  edgeDatas: EdgeData[],
-  squareDatas: SquareData[]
-): ParsingErrorObject {
-  let errorMessages: string[] = [];
+export function useErrorHandling() {
+  const [error, setError] = useState<ParsingErrorObject>();
 
-  if (!areBracketsCorrect(brackets)) {
-    errorMessages.push("Brackets not closed");
-  }
+  const checkForErrors = (
+    brackets: string[],
+    edgeDatas: EdgeData[],
+    squareDatas: SquareData[]
+  ) => {
+    let errorMessages: string[] = [];
 
-  if (!doAllSourceVariablesExist(edgeDatas, squareDatas)) {
-    errorMessages.push("Source-Node does not exist");
-  }
+    if (!areBracketsCorrect(brackets)) {
+      errorMessages.push("Brackets not closed");
+    }
 
-  if (!doAllTargetVariablesExist(edgeDatas, squareDatas)) {
-    errorMessages.push("Target-Node does not exist");
-  }
+    if (!doAllSourceVariablesExist(edgeDatas, squareDatas)) {
+      errorMessages.push("Source-Node does not exist");
+    }
 
-  return { hasError: errorMessages.length > 0, errorMessages: errorMessages };
+    if (!doAllTargetVariablesExist(edgeDatas, squareDatas)) {
+      errorMessages.push("Target-Node does not exist");
+    }
+
+    setError({
+      hasError: errorMessages.length > 0,
+      errorMessages: errorMessages,
+    });
+  };
+
+  return [error, checkForErrors] as const;
 }
 
 function doAllSourceVariablesExist(

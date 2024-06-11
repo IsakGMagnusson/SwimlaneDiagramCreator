@@ -21,8 +21,8 @@ import Square, {
   findSquarePositionFromVariable,
   isSquareSlotOccupied,
 } from "../components/Square";
-import { doesParseHaveError as checkForParseError } from "../util/ErrorHandling";
-import { buildXML } from "../util/XMLBuilder";
+import { useErrorHandling } from "../hooks/useErrorHandling";
+import { useXmlBuilder } from "../hooks/XMLBuilder";
 
 const startString: string =
   "Swimlane1{\n" +
@@ -52,15 +52,15 @@ export default function MainPage() {
   const [nodes, setNodes] = useNodesState<DiagramObjects[]>([]);
   const [edges, setEdges] = useEdgesState([]);
 
-  const [isParsingValid, setIsParsingValid] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string[]>([]);
-  const [XML, setXML] = useState<string>("");
-  const [displayXMLState, setdisplayXMLState] = useState(false);
+  const [xml, buildXml] = useXmlBuilder();
+
+  const [displayState, setDisplayState] = useState(false);
+  const [errorObject, checkForErrors] = useErrorHandling();
 
   const [textareaContent, setTextareaContent] = useState(startString);
 
   function textToData(): DiagramData {
-    setdisplayXMLState(false);
+    setDisplayState(false);
     let lines: string[] = textareaContent.split(/\r?\n/);
     let swimlaneTag = "";
     let squareXPosition = SQUARE_STARTING_X;
@@ -71,7 +71,7 @@ export default function MainPage() {
 
     let swimlaneDatas: SwimlaneData[] = [];
     let squareDatas: SquareData[] = [];
-    let edgeInputaData: EdgeData[] = [];
+    let edgeInputData: EdgeData[] = [];
     lines.forEach((line: string) => {
       for (let i = 0; i < line.length; i++) {
         if (line[i] === "}") brackets.push("}");
@@ -125,7 +125,7 @@ export default function MainPage() {
           to
         );
 
-        edgeInputaData.push({
+        edgeInputData.push({
           id: from.concat(to),
           source: from,
           target: to,
@@ -139,19 +139,13 @@ export default function MainPage() {
       (swimlane) => (swimlane.width = SQUARE_SIZE + squareXPosition)
     );
 
-    const ErrorObject = checkForParseError(
-      brackets,
-      edgeInputaData,
-      squareDatas
-    );
-    setIsParsingValid(!ErrorObject.hasError);
-    setErrorMessage(ErrorObject.errorMessages!);
+    checkForErrors(brackets, edgeInputData, squareDatas);
 
     return {
       swimlanes: swimlaneDatas,
       squares: squareDatas,
-      edges: edgeInputaData,
-      hasParsingError: ErrorObject.hasError,
+      edges: edgeInputData,
+      hasParsingError: errorObject?.hasError!,
     };
   }
 
@@ -208,12 +202,12 @@ export default function MainPage() {
 
   useEffect(() => {
     dataToDiagram(textToData());
-    setXML(buildXML(textToData()));
-  }, [isParsingValid]);
+    buildXml(textToData());
+  }, [errorObject?.hasError]);
 
-  function displayXML() {
-    setXML(buildXML(textToData()));
-    setdisplayXMLState(!displayXMLState);
+  function toggleDisplay() {
+    buildXml(textToData());
+    setDisplayState(!displayState);
   }
 
   return (
@@ -226,35 +220,35 @@ export default function MainPage() {
         >
           {textareaContent}
         </textarea>
-        <button className="export-button" onClick={displayXML}>
-          Toggle xml
+        <button className="export-button" onClick={toggleDisplay}>
+          Toggle display
         </button>
       </div>
 
       <div className="reactflow-container">
-        {displayXMLState ? (
+        {displayState ? (
           <div className="display-xml">
             <div className="display-xml-info">Draw.io xml-format:</div>
             <textarea readOnly className="display-xml-textarea">
-              {xmlFormat(XML)}
+              {xmlFormat(xml)}
             </textarea>
           </div>
         ) : (
           <>
-            {isParsingValid ? (
+            {errorObject?.hasError ? (
+              <div className="errormessage-container">
+                <p className="errormessage-text-header">Errors</p>
+                {errorObject.errorMessages.map((msg) => (
+                  <p className="errormessage-text">{msg}</p>
+                ))}
+              </div>
+            ) : (
               <ReactFlow
                 nodeTypes={nodeTypes}
                 nodes={nodes}
                 edges={edges}
+                fitView
               ></ReactFlow>
-            ) : (
-              <div className="errormessage-container">
-                <p className="errormessage-text-header">Errors</p>
-
-                {errorMessage.map((msg) => (
-                  <p className="errormessage-text">{msg}</p>
-                ))}
-              </div>
             )}
           </>
         )}
