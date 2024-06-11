@@ -22,7 +22,7 @@ import Square, {
   isSquareSlotOccupied,
 } from "../components/Square";
 import { useErrorHandling } from "../hooks/useErrorHandling";
-import { useXmlBuilder } from "../hooks/XMLBuilder";
+import { useXmlBuilder } from "../hooks/useXmlBuilder";
 
 const startString: string =
   "Swimlane1{\n" +
